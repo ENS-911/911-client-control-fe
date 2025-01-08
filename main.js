@@ -1,9 +1,9 @@
 import { renderHeader } from './components/header.js';
-import { loadClients } from './components/clientSelector.js';
+import { initializeApp } from './components/clientSelector.js';
 
-function initializeApp() {
+function initialize() {
     renderHeader(); // Updated function call
-    loadClients(); // Ensure this function is available
+    initializeApp(); // Ensure this function is available
 }
 
-initializeApp();
+document.addEventListener('DOMContentLoaded', initialize);
