@@ -110,13 +110,13 @@ function createFormRow(parent, fields) {
     });
 }
 
-// Save or Update Client
-export function handleFormSubmit(clientData) {
-    const isNewClient = !clientData;
+function handleFormSubmit() {
+    // Check if this is a new client based on currentClient state
+    const isNewClient = !currentClient;
 
-    // Gather form values
+    // Collect form data
     const formData = {
-        key: isNewClient ? generateLicenseKey() : clientData.key, // Generate new key for new clients
+        key: isNewClient ? generateLicenseKey() : currentClient.key,
         name: document.getElementById('name').value,
         address: document.getElementById('address').value,
         city: document.getElementById('city').value,
@@ -140,23 +140,55 @@ export function handleFormSubmit(clientData) {
         battalion: document.getElementById('battalion').value,
         db_city: document.getElementById('db_city').value,
         jurisdiction: document.getElementById('jurisdiction').value,
+        latitude: document.getElementById('latitude').value,
+        longitude: document.getElementById('longitude').value,
+        master_incident_id: document.getElementById('master_incident_id').value,
+        premise: document.getElementById('premise').value,
+        priority: document.getElementById('priority').value,
+        sequencenumber: document.getElementById('sequencenumber').value,
+        stacked: document.getElementById('stacked').value,
+        db_state: document.getElementById('db_state').value,
+        status: document.getElementById('status').value,
+        statusdatetime: document.getElementById('statusdatetime').value,
+        type: document.getElementById('type').value,
+        type_description: document.getElementById('type_description').value,
+        zone: document.getElementById('zone').value,
     };
 
+    // Endpoint and method
     const url = isNewClient
         ? 'https://client-control.911-ens-services.com/clients'
-        : `https://client-control.911-ens-services.com/client/${clientData.id}`;
+        : `https://client-control.911-ens-services.com/client/${currentClient.id}`;
 
+    const method = isNewClient ? 'POST' : 'PUT';
+
+    // Debugging
+    console.log('Submitting data:', formData);
+    console.log(`Endpoint: ${url}, Method: ${method}`);
+
+    // Send request
     fetch(url, {
-        method: isNewClient ? "POST" : "PUT",
-        headers: { "Content-Type": "application/json" },
+        method: method,
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),
     })
-        .then(response => response.json())
-        .then(result => {
-            console.log(`${isNewClient ? "Saved" : "Updated"} client:`, result);
-            loadClients(); // Refresh list
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`Server error: ${response.status}`);
+            }
+            return response.json();
         })
-        .catch(err => console.error(`Error ${isNewClient ? "saving" : "updating"} client:`, err));
+        .then(result => {
+            console.log(`${isNewClient ? 'Saved' : 'Updated'} client:`, result);
+
+            // Refresh client list and reset the form
+            loadClients();
+            alert(`Client ${isNewClient ? 'saved' : 'updated'} successfully!`);
+        })
+        .catch(err => {
+            console.error(`Error ${isNewClient ? 'saving' : 'updating'} client:`, err);
+            alert(`Failed to ${isNewClient ? 'save' : 'update'} client. Check logs.`);
+        });
 }
 
 function generateLicenseKey() {

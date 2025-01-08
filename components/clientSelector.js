@@ -95,9 +95,23 @@ function setupButtons() {
 }
 
 // 5. Toggle button between Save and Update
-function toggleButtonState(isNew) {
-    const saveUpdateBtn = document.getElementById('saveUpdateBtn');
-    saveUpdateBtn.innerText = isNew ? 'Save' : 'Update';
+function toggleButtonState(isNewClient) {
+    const flexButton = document.getElementById('flexButton');
+    if (!flexButton) return; // Ensure button exists before proceeding
+
+    // Update button label
+    flexButton.innerText = isNewClient ? 'Save' : 'Update';
+
+    // Remove all existing event listeners to avoid duplicates
+    flexButton.replaceWith(flexButton.cloneNode(true));
+    const updatedButton = document.getElementById('flexButton');
+
+    // Attach new event listener based on state
+    if (isNewClient) {
+        updatedButton.onclick = () => handleFormSubmit(null); // Save for new client
+    } else {
+        updatedButton.onclick = () => handleFormSubmit(currentClient); // Update existing client
+    }
 }
 
 // 6. Handle saving or updating client data
