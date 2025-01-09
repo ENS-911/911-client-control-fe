@@ -58,7 +58,6 @@ function setupFormButtons() {
     });
 }
 
-// 3. Handle selecting an existing client
 function selectClient() {
     const clientId = document.getElementById('clientSelect').value;
 
@@ -67,56 +66,56 @@ function selectClient() {
         return;
     }
 
-    resetForm();
+    resetForm(); // Clear any previous form data
 
     // Fetch client data
     fetch(`https://client-control.911-ens-services.com/client/${clientId}`)
         .then(response => response.json())
         .then(clientData => {
-            console.log('Fetched client data:', clientData);
-
             if (!clientData || Object.keys(clientData).length === 0) {
                 console.error('Empty or invalid client data received.');
                 return;
             }
 
-            setCurrentClient(clientData); // Update state
-            renderForm(clientData);       // Populate form with existing client data
+            setCurrentClient(clientData); // Set the current client context
+            renderForm(clientData);    // Populate form with existing client data
             toggleNewClientButton(false); // Change button to "Update"
         })
         .catch(err => console.error('Error fetching client:', err));
 }
 
-// 4. Toggle "New Client" button to "Save" or "Update"
-function toggleNewClientButton(isNewClient) {
-    const newClientBtn = document.getElementById('newClientBtn');
 
-    if (!newClientBtn) {
-        console.error('New Client button is missing!');
+function toggleNewClientButton(isNewClient) {
+    const buttonContainer = document.getElementById('buttonContainer');
+    if (!buttonContainer) {
+        console.error("Button container not found!");
         return;
     }
 
-    // Clear existing event listeners by replacing the button
-    const newButton = newClientBtn.cloneNode(true);
-    newClientBtn.replaceWith(newButton);
+    // Clear the container to avoid duplicate buttons
+    buttonContainer.innerHTML = "";
 
-    // Update button text and reattach appropriate event listener
+    // Create the new button with the appropriate state
+    const actionButton = document.createElement('button');
+    actionButton.id = "actionButton";
+
     if (isNewClient) {
-        newButton.innerText = 'Save';
-        newButton.onclick = () => handleFormSubmit(null); // Save for new client
+        actionButton.innerText = "Save";
+        actionButton.onclick = () => handleFormSubmit(null); // Save logic for new client
     } else {
-        newButton.innerText = 'Update';
-        newButton.onclick = () => handleFormSubmit(getCurrentClient()); // Update for existing client
+        actionButton.innerText = "Update";
+        actionButton.onclick = () => handleFormSubmit(getCurrentClient()); // Update logic for existing client
     }
 
-    // Update button's ID for consistency
-    newButton.id = 'newClientBtn';
+    // Append the new action button to the container
+    buttonContainer.appendChild(actionButton);
 }
 
 function resetForm() {
     const fullFormWrap = document.getElementById('fullForm');
     if (fullFormWrap) {
-        fullFormWrap.innerHTML = ''; // Clear the form
+        fullFormWrap.innerHTML = ""; // Clear the form
     }
-    resetCurrentClient(); // Reset the context
+    // Ensure the button state is reset to the default "New Client" state
+    toggleNewClientButton(true);
 }
