@@ -1,5 +1,5 @@
 import { gatherFormData, generateLicenseKey } from './helpers.js';
-import { setCurrentClient, getCurrentClient } from './stateManager.js';
+import { setCurrentClient } from './stateManager.js';
 import { initializeApp } from './clientSelector.js';
 
 export function renderForm(clientData = null) {
@@ -7,18 +7,66 @@ export function renderForm(clientData = null) {
     const fullFormWrap = document.getElementById('fullForm');
     fullFormWrap.innerHTML = ""; // Clear previous form content
 
-    // Add Header
+    // Form Header
+    const formHeader = document.createElement('div');
+    formHeader.style.cssText = `
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+    `;
     const formLabel = document.createElement('h3');
     formLabel.innerText = isNewClient
         ? "New Client Form - License Key: Auto-generated"
         : `Data for: ${clientData.name} --- License Key: ${clientData.key}`;
-    fullFormWrap.appendChild(formLabel);
+    formHeader.appendChild(formLabel);
 
-    // Render sections
+    // Add Delete Button if it's an existing client
+    if (!isNewClient) {
+        const deleteButton = document.createElement('button');
+        deleteButton.id = "deleteClientBtn";
+        deleteButton.innerText = "Delete Client";
+        deleteButton.style.cssText = `
+            background-color: #ff6666;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 5px 10px;
+            cursor: pointer;
+        `;
+        deleteButton.addEventListener('click', (e) => {
+            e.preventDefault();
+            showDeleteConfirmation(clientData);
+        });
+        formHeader.appendChild(deleteButton);
+    }
+
+    fullFormWrap.appendChild(formHeader);
+
+    // Render Sections
     renderSection(fullFormWrap, "Client Contact Information", getContactFields(clientData));
     renderSection(fullFormWrap, "Account Controls", getAccountFields(clientData));
     renderSection(fullFormWrap, "Database Controls", getDatabaseFields(clientData));
     renderSection(fullFormWrap, "Database Translation Key", getTranslationFields(clientData));
+
+    // Add Save/Update Button
+    const formButton = document.createElement('button');
+    formButton.id = 'formActionBtn';
+    formButton.innerText = isNewClient ? 'Save' : 'Update';
+    formButton.style.cssText = `
+        background-color: #007BFF;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        padding: 10px 20px;
+        margin-top: 20px;
+        cursor: pointer;
+    `;
+    formButton.addEventListener('click', (e) => {
+        e.preventDefault();
+        handleFormSubmit(clientData);
+    });
+    fullFormWrap.prepend(formButton);
 }
 
 // Render a section of the form
@@ -68,21 +116,19 @@ function renderSection(parent, title, fields) {
     parent.appendChild(sectionDiv);
 }
 
-export function handleFormSubmit() {
-    const currentClient = getCurrentClient(); // Retrieve the current client
-    const isNewClient = !currentClient; // Determine if this is a new client
-    const formData = gatherFormData(); // Collect form data from the form
+export function handleFormSubmit(clientData) {
+    const isNewClient = !clientData; // Determine if it's a new client
+    const formData = gatherFormData(); // Collect form data
 
-    // Generate a license key for new clients
-    if (isNewClient) formData.key = generateLicenseKey();
+    if (isNewClient) formData.key = generateLicenseKey(); // Generate a key for new clients
 
     const url = isNewClient
         ? 'https://client-control.911-ens-services.com/clients'
-        : `https://client-control.911-ens-services.com/clients/${currentClient.id}`;
+        : `https://client-control.911-ens-services.com/clients/${clientData.id}`;
 
     const method = isNewClient ? 'POST' : 'PUT';
 
-    console.log(`Submitting ${isNewClient ? 'new' : 'existing'} client data:`, formData);
+    console.log(`Submitting to ${url} with method ${method}`, formData); // Debugging
 
     fetch(url, {
         method,
@@ -90,24 +136,30 @@ export function handleFormSubmit() {
         body: JSON.stringify(formData),
     })
         .then(response => {
-            if (!response.ok) {
-                throw new Error(`Server error: ${response.status}`);
-            }
+            if (!response.ok) throw new Error(`Server error: ${response.status}`);
             return response.json();
         })
-        .then(result => {
-            alert(`${isNewClient ? "Saved" : "Updated"} client successfully!`);
+        .then((result) => {
+            console.log(`${isNewClient ? "Saved" : "Updated"} client successfully!`, result);
 
-            if (!isNewClient) {
-                // Update the current client state after a successful update
-                setCurrentClient(result);
+            // Extract the client data from the response
+            const client = isNewClient ? result.data[0] : result;
+
+            setCurrentClient(client); // Update the state with the new or updated client
+            initializeApp(); // Reinitialize the app to refresh the dropdown
+
+            // Select the new client in the dropdown (for a seamless experience)
+            const clientSelect = document.getElementById('clientSelect');
+            if (clientSelect) {
+                clientSelect.value = client.id; // Select the newly saved client
             }
 
-            initializeApp(); // Reinitialize the app to reflect changes
+            // Render the form for the new or updated client
+            renderForm(client); 
         })
         .catch(err => {
             console.error(`Error ${isNewClient ? "saving" : "updating"} client:`, err);
-            alert(`Failed to ${isNewClient ? "save" : "update"} client.`);
+            alert(`Failed to ${isNewClient ? "save" : "update"} client. Check logs.`);
         });
 }
 
@@ -171,4 +223,70 @@ function getTranslationFields(clientData) {
         { label: "ID:", id: "db_id", value: clientData?.db_id || "" },
         { label: "Location:", id: "location", value: clientData?.location || "" },
     ];
+}
+
+function showDeleteConfirmation(clientData) {
+    const confirmationOverlay = document.createElement('div');
+    confirmationOverlay.id = 'confirmationOverlay';
+    confirmationOverlay.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background-color: rgba(0, 0, 0, 0.5);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+    `;
+
+    const confirmationBox = document.createElement('div');
+    confirmationBox.style.cssText = `
+        background-color: white;
+        padding: 20px;
+        border-radius: 8px;
+        text-align: center;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    `;
+
+    confirmationBox.innerHTML = `
+        <p>Are you sure you want to delete this client? This action cannot be undone.</p>
+        <button id="confirmDeleteBtn" style="background-color: #ff6666; color: white; border: none; padding: 10px 20px; margin: 10px; border-radius: 4px; cursor: pointer;">Yes</button>
+        <button id="cancelDeleteBtn" style="background-color: #cccccc; color: black; border: none; padding: 10px 20px; margin: 10px; border-radius: 4px; cursor: pointer;">Cancel</button>
+    `;
+
+    confirmationOverlay.appendChild(confirmationBox);
+    document.body.appendChild(confirmationOverlay);
+
+    // Attach event listeners
+    document.getElementById('confirmDeleteBtn').addEventListener('click', () => {
+        deleteClient(clientData); // Proceed with deletion
+        document.body.removeChild(confirmationOverlay); // Close confirmation
+    });
+
+    document.getElementById('cancelDeleteBtn').addEventListener('click', () => {
+        document.body.removeChild(confirmationOverlay); // Cancel deletion
+    });
+}
+
+function deleteClient(clientData) {
+    const url = `https://client-control.911-ens-services.com/client/${clientData.id}`;
+
+    fetch(url, {
+        method: 'DELETE',
+    })
+        .then(response => {
+            if (!response.ok) throw new Error(`Error deleting client: ${response.status}`);
+            return response.json();
+        })
+        .then(() => {
+            alert('Client deleted successfully!');
+            document.body.removeChild(document.getElementById('confirmationOverlay')); // Close the popup
+            initializeApp(); // Refresh the app
+        })
+        .catch(err => {
+            console.error('Error deleting client:', err);
+            alert('Failed to delete client. Check the logs for more details.');
+        });
 }

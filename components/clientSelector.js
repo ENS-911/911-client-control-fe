@@ -5,20 +5,32 @@ import { setCurrentClient, getCurrentClient, resetCurrentClient } from './stateM
 const selectorWrap = document.getElementById('selectorWrap');
 const fullFormWrap = document.getElementById('fullForm');
 
-// Initialize the app
 export function initializeApp() {
     renderClientSelector(); // Render client dropdown and buttons
-    setupFormButtons();     // Setup "New Client" button
+
+    // Check and render the current client form if a client exists in state
+    const currentClient = getCurrentClient();
+    if (currentClient) {
+        console.log('Initializing with client:', currentClient);
+        renderForm(currentClient); // Render the form with the client data
+    }
 }
 
-// 1. Render the client selector and buttons
 function renderClientSelector() {
     const selectorHTML = `
-        <label for="clientSelect">Select a client:</label>
-        <select id="clientSelect">
-            <option value="">-- Select Client --</option>
-        </select>
-        <button id="selectClientBtn">Select Client</button>
+        <div class="selectOpt" style="display: flex; align-items: center; justify-content: space-between;">
+            <div>
+                <label for="clientSelect">Select a client:</label>
+                <select id="clientSelect">
+                    <option value="">-- Select Client --</option>
+                </select>
+                <button id="selectClientBtn">Select Client</button>
+                <button id="newClientBtn">New Client</button>
+            </div>
+            <button id="resetBtn" style="background-color: #ffcccc; color: #b30000; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer;">
+                Reset
+            </button>
+        </div>
     `;
     selectorWrap.innerHTML = selectorHTML;
 
@@ -34,28 +46,17 @@ function renderClientSelector() {
                 selectElement.appendChild(option);
             });
 
-            // Add event listener for "Select Client" button
+            // Add event listeners for buttons
             document.getElementById('selectClientBtn').addEventListener('click', selectClient);
+            document.getElementById('newClientBtn').addEventListener('click', () => {
+                setCurrentClient(null); // Clear state
+                renderForm(); // Render an empty form
+            });
+            document.getElementById('resetBtn').addEventListener('click', () => {
+                window.location.reload(); // Refresh the page
+            });
         })
         .catch(err => console.error('Error loading clients:', err));
-}
-
-// 2. Setup "New Client" button and toggle functionality
-function setupFormButtons() {
-    const buttonContainer = document.createElement('div');
-    buttonContainer.id = 'buttonContainer';
-
-    buttonContainer.innerHTML = `
-        <button id="newClientBtn">New Client</button>
-    `;
-    selectorWrap.after(buttonContainer); // Place below dropdown
-
-    // Add event listener for "New Client" button
-    document.getElementById('newClientBtn').addEventListener('click', () => {
-        resetCurrentClient(); // Clear client context
-        renderForm();          // Render an empty form for new client
-        toggleNewClientButton(true); // Change button to "Save"
-    });
 }
 
 function selectClient() {
@@ -66,24 +67,16 @@ function selectClient() {
         return;
     }
 
-    resetForm(); // Clear any previous form data
-
     // Fetch client data
     fetch(`https://client-control.911-ens-services.com/client/${clientId}`)
         .then(response => response.json())
         .then(clientData => {
-            if (!clientData || Object.keys(clientData).length === 0) {
-                console.error('Empty or invalid client data received.');
-                return;
-            }
-
-            setCurrentClient(clientData); // Set the current client context
-            renderForm(clientData);    // Populate form with existing client data
-            toggleNewClientButton(false); // Change button to "Update"
+            console.log('Fetched client data:', clientData);
+            setCurrentClient(clientData); // Update state with selected client
+            renderForm(clientData); // Populate form with client data
         })
         .catch(err => console.error('Error fetching client:', err));
 }
-
 
 function toggleNewClientButton(isNewClient) {
     const buttonContainer = document.getElementById('buttonContainer');
@@ -114,8 +107,7 @@ function toggleNewClientButton(isNewClient) {
 function resetForm() {
     const fullFormWrap = document.getElementById('fullForm');
     if (fullFormWrap) {
-        fullFormWrap.innerHTML = ""; // Clear the form
+        fullFormWrap.innerHTML = ''; // Clear the form
     }
-    // Ensure the button state is reset to the default "New Client" state
-    toggleNewClientButton(true);
+    resetCurrentClient(); // Reset state
 }
