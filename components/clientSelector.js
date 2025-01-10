@@ -104,7 +104,7 @@ function toggleNewClientButton(isNewClient) {
     buttonContainer.appendChild(actionButton);
 }
 
-function resetForm() {
+export function resetForm() {
     const fullFormWrap = document.getElementById('fullForm');
     if (fullFormWrap) {
         fullFormWrap.innerHTML = ''; // Clear the form

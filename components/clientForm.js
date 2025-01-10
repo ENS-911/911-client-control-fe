@@ -1,6 +1,6 @@
 import { gatherFormData, generateLicenseKey } from './helpers.js';
 import { setCurrentClient } from './stateManager.js';
-import { initializeApp } from './clientSelector.js';
+import { initializeApp, resetForm } from './clientSelector.js';
 
 export function renderForm(clientData = null) {
     const isNewClient = !clientData;
@@ -271,22 +271,28 @@ function showDeleteConfirmation(clientData) {
 }
 
 function deleteClient(clientData) {
-    const url = `https://client-control.911-ens-services.com/client/${clientData.id}`;
+    if (!clientData || !clientData.id) {
+        console.error("No client selected for deletion.");
+        return;
+    }
 
-    fetch(url, {
+    fetch(`https://client-control.911-ens-services.com/clients/${clientData.id}`, {
         method: 'DELETE',
     })
-        .then(response => {
-            if (!response.ok) throw new Error(`Error deleting client: ${response.status}`);
+        .then((response) => {
+            if (!response.ok) {
+                throw new Error(`Failed to delete client: ${response.status}`);
+            }
             return response.json();
         })
         .then(() => {
-            alert('Client deleted successfully!');
-            document.body.removeChild(document.getElementById('confirmationOverlay')); // Close the popup
-            initializeApp(); // Refresh the app
+            alert(`Client "${clientData.name}" deleted successfully!`);
+            resetForm(); // Reset the form
+            initializeApp(); // Reinitialize app to refresh the dropdown and UI
         })
-        .catch(err => {
+        .catch((err) => {
             console.error('Error deleting client:', err);
-            alert('Failed to delete client. Check the logs for more details.');
+            alert('Failed to delete client. Please try again.');
         });
 }
+
