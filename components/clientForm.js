@@ -295,4 +295,3 @@ function deleteClient(clientData) {
             alert('Failed to delete client. Please try again.');
         });
 }
-
