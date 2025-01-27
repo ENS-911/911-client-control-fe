@@ -1,16 +1,32 @@
 <!doctype html>
 <html>
+
 <head>
-<title>ENS Control Panel</title>
-<meta name="description" content="">
-<meta name="keywords" content="">
-<link rel="stylesheet" href="style.css" />
+    <title>ENS Control Panel</title>
+    <meta name="description" content="">
+    <meta name="keywords" content="">
+    <link rel="stylesheet" href="style.css" />
 </head>
+
 <body>
     <div id="app">
-        <div id="selectorWrap"></div>
-        <form id="addOns"></form>
-        <form id="fullForm"></form>
+        <div id="login-container">
+            <form id="login-form">
+                <label for="email">Email</label>
+                <input type="email" id="email" name="email" required>
+
+                <label for="password">Password</label>
+                <input type="password" id="password" name="password" required>
+
+                <button type="submit">Login</button>
+            </form>
+            <p id="error-message" style="color: red; display: none;">Invalid credentials or insufficient permissions.
+            </p>
+        </div>
+
+        <div id="selectorWrap" style="display: none;"></div>
+        <form id="addOns" style="display: none;"></form>
+        <form id="fullForm" style="display: none;"></form>
     </div>
 
     <script type="module" src="./main.js"></script>
@@ -19,6 +35,7 @@
     <script type="module" src="./components/clientForm.js"></script>
     <script type="module" src="./components/userForm.js"></script>
     <script type="module" src="./components/api.js"></script>
-    
+
 </body>
+
 </html>

@@ -36,3 +36,22 @@ function addUser(data) {
         body: JSON.stringify(data),
     });
 }
+
+export async function login(credentials) {
+    return fetchData('/admin-login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(credentials),
+    });
+}
+
+export async function verifyToken(token) {
+    return fetchData('/verify-token', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`, // Send token in the Authorization header
+        },
+        body: JSON.stringify({ token }), // Optionally send the token in the body
+    });
+}
