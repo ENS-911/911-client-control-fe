@@ -1,16 +1,18 @@
 import { renderHeader } from './components/header.js';
-import { initializeApp } from './components/clientSelector.js';
+import { navigateTo } from './components/router.js';
 import { login, verifyToken } from './components/api.js';
 
+// Display error messages
 function showError(message) {
     const errorElement = document.getElementById('error-message');
     errorElement.textContent = message;
     errorElement.style.display = 'block';
 }
 
+// Check user session by verifying the token
 async function checkSession() {
     const token = localStorage.getItem('token');
-    if (!token) return false; // No token, show the login page
+    if (!token) return false;
 
     try {
         const response = await verifyToken(token); // Verify token with backend
@@ -20,7 +22,7 @@ async function checkSession() {
             throw new Error('Access restricted to ENS Admin users.');
         }
 
-        // If valid, restore the session
+        // Restore the session
         localStorage.setItem('user', JSON.stringify(user));
         return true;
     } catch (err) {
@@ -31,19 +33,15 @@ async function checkSession() {
     }
 }
 
+// Initialize login functionality
 async function initializeLogin() {
-    renderHeader(); // Render the header immediately, regardless of login state
-
     const isLoggedIn = await checkSession();
 
     if (isLoggedIn) {
         console.log('Session restored, loading app...');
         document.getElementById('login-container').style.display = 'none';
-        document.getElementById('selectorWrap').style.display = 'block';
-        document.getElementById('addOns').style.display = 'block';
-        document.getElementById('fullForm').style.display = 'block';
-
-        initializeApp(); // Initialize the app for logged-in users
+        document.getElementById('main-content').style.display = 'block'; // Ensure content is shown
+        navigateTo(''); // Navigate to the home page
         return;
     }
 
@@ -67,13 +65,10 @@ async function initializeLogin() {
             localStorage.setItem('user', JSON.stringify(user));
             localStorage.setItem('token', response.token);
 
-            // Hide login and show the app
+            // Hide login and load the app
             document.getElementById('login-container').style.display = 'none';
-            document.getElementById('selectorWrap').style.display = 'block';
-            document.getElementById('addOns').style.display = 'block';
-            document.getElementById('fullForm').style.display = 'block';
-
-            initializeApp();
+            document.getElementById('main-content').style.display = 'block';
+            navigateTo(''); // Navigate to home after login
         } catch (err) {
             console.error(err);
             showError(err.message || 'Invalid login credentials.');
@@ -81,4 +76,23 @@ async function initializeLogin() {
     });
 }
 
-document.addEventListener('DOMContentLoaded', initializeLogin);
+// Initialize the app
+document.addEventListener('DOMContentLoaded', async () => {
+    // Render the header
+    renderHeader(navigateTo);
+
+    // Load the appropriate content based on the session and routing
+    const isLoggedIn = await checkSession();
+
+    if (isLoggedIn) {
+        console.log('User is logged in. Loading application...');
+        document.getElementById('login-container').style.display = 'none';
+        document.getElementById('main-content').style.display = 'block'; // Show content area
+        navigateTo(window.location.hash.replace('#', '') || ''); // Load the initial route
+    } else {
+        console.log('User is not logged in. Showing login form...');
+        document.getElementById('login-container').style.display = 'block'; // Show login form
+        document.getElementById('main-content').style.display = 'none'; // Hide content area
+        initializeLogin(); // Initialize the login process
+    }
+});
