@@ -32,6 +32,8 @@ async function checkSession() {
 }
 
 async function initializeLogin() {
+    renderHeader(); // Render the header immediately, regardless of login state
+
     const isLoggedIn = await checkSession();
 
     if (isLoggedIn) {
@@ -41,8 +43,7 @@ async function initializeLogin() {
         document.getElementById('addOns').style.display = 'block';
         document.getElementById('fullForm').style.display = 'block';
 
-        renderHeader();
-        initializeApp();
+        initializeApp(); // Initialize the app for logged-in users
         return;
     }
 
@@ -72,7 +73,6 @@ async function initializeLogin() {
             document.getElementById('addOns').style.display = 'block';
             document.getElementById('fullForm').style.display = 'block';
 
-            renderHeader();
             initializeApp();
         } catch (err) {
             console.error(err);
