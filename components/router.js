@@ -1,5 +1,6 @@
 import { renderHome } from './home.js';
 import { renderClientSelector } from './clientSelector.js';
+import { resetToLogin } from '../main.js';
 
 const routes = {
     '': renderHome, // Default route (home)
@@ -23,21 +24,28 @@ function clearPageContent() {
 }
 
 function loadRoute() {
-    let hash = window.location.hash.replace('#', ''); // Remove the #
+    let hash = window.location.hash.replace('#', '');
     if (hash.startsWith('/')) {
-        hash = hash.slice(1); // Remove the leading /
+        hash = hash.slice(1);
     }
-    console.log(`Current hash: "${hash}"`); // Debugging log
+    console.log(`Current hash: "${hash}"`);
 
-    const route = routes[hash]; // Find the corresponding route
+    // Reset UI if the user is logged out
+    const token = localStorage.getItem('token');
+    if (!token) {
+        resetToLogin();
+        return;
+    }
 
-    clearPageContent(); // Clear any old content before rendering the new view
+    const route = routes[hash];
+
+    clearPageContent(); // Ensure old data is cleared
 
     if (route) {
-        console.log(`Rendering route: "${hash}"`); // Debugging log
+        console.log(`Rendering route: "${hash}"`);
         route();
     } else {
-        console.error(`No route found for hash: "${hash}"`); // Debugging log
+        console.error(`No route found for hash: "${hash}"`);
         const mainContent = document.getElementById('main-content');
         if (mainContent) {
             mainContent.innerHTML = `

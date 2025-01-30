@@ -246,3 +246,12 @@ button {
 .logout-button:hover {
     background-color: #c0392b;
 }
+
+#dropdown-menu, #hamburger {
+    display: none; /* Default hidden state */
+}
+
+.logged-in #dropdown-menu,
+.logged-in #hamburger {
+    display: flex;
+}
