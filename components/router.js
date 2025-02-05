@@ -11,7 +11,7 @@ const routes = {
 
 export function navigateTo(route) {
     if (!route && route !== '') {
-        console.error("Invalid route received in navigateTo:", route);
+        console.error("Error: Invalid route received in navigateTo:", route);
         return;
     }
 
@@ -21,7 +21,9 @@ export function navigateTo(route) {
 }
 
 export function updateUI() {
-    const hash = window.location.hash.replace('#', '').replace('/', '');
+    let hash = window.location.hash.replace('#', '').replace('/', '');
+    if (!hash) hash = ''; // Default to home if hash is empty
+
     console.log(`Updating UI for route: "${hash}"`);
 
     // Select UI elements
