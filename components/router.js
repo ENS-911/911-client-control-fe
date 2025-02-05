@@ -1,11 +1,12 @@
 import { renderHome } from './home.js';
 import { renderClientSelector } from './clientSelector.js';
 import { initializeLogin } from '../main.js';
+import { initializeUserApp } from './userSelector.js';
 
 const routes = {
     '': renderHome, // Home
     'add-edit-client': renderClientSelector, // Add/Edit Client
-    'add-edit-user': () => console.log("Add/Edit User Clicked (No function yet)"), // Placeholder
+    'add-edit-user': initializeUserApp,
     'login': initializeLogin, // Login
 };
 
