@@ -181,6 +181,7 @@ function getAccountFields(clientData) {
     return [
         { label: "Subscription Active?:", id: "active", type: "select", options: ["active", "inactive"], value: clientData?.active || "active" },
         { label: "Subscription Plan:", id: "plan", type: "select", options: ["bronze", "silver", "gold", "platinum"], value: clientData?.plan || "bronze" },
+        { label: "Single/Split Display:", id: "display", type: "select", options: ["single", "header_split"], value: clientData?.display || "single" },
         { label: "NWS County Code:", id: "nws", value: clientData?.nws || "" },
     ];
 }
